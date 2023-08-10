@@ -1,0 +1,77 @@
+# これより上の EditorConfig を適用しない
+root = true
+
+[*]
+charset = utf-8
+
+
+[*.{cs,csx}]
+# メンバー アクセスを簡略化する
+dotnet_diagnostic.IDE0002.severity = none
+# 使用されていない非公開メンバーを削除する
+dotnet_diagnostic.IDE0051.severity = silent
+# 読み取られていない非公開メンバーを削除する
+dotnet_diagnostic.IDE0052.severity = silent
+# ブロックと後続のステートメントの間に空白行が必要
+dotnet_diagnostic.IDE2003.severity = none
+# 名前付けルール違反
+dotnet_diagnostic.IDE1006.severity = none
+# 使用しない using
+dotnet_diagnostic.IDE0005.severity = none
+dotnet_diagnostic.CS8019.severity = none
+# 名前空間で型を宣言
+dotnet_diagnostic.CA1050.severity = none
+
+charset = utf-8
+indent_style = space
+tab_width = 2
+indent_size = 2
+
+# namespace Sample;
+# namespace Sample { }
+csharp_style_namespace_declarations = file_scoped:warning
+
+# }
+# [EOF]
+insert_final_newline = true
+
+# > < <= >= is as == !=
+dotnet_style_parentheses_in_other_binary_operators = always_for_clarity:suggestion
+
+# && || ??
+dotnet_style_parentheses_in_relational_binary_operators = always_for_clarity:suggestion
+
+# A();
+#
+#
+# B();
+dotnet_style_allow_multiple_blank_lines_experimental = false:silent
+
+# if (...) {
+#
+# if (...)
+# {
+csharp_new_line_before_open_brace = none
+csharp_new_line_before_else = false
+csharp_new_line_before_catch = false
+csharp_new_line_before_finally = false
+csharp_new_line_before_members_in_object_initializers = false
+csharp_new_line_before_members_in_anonymous_types = false
+csharp_new_line_between_query_expression_clauses = false
+
+
+[*.{csproj,fsproj}]
+charset = utf-8
+indent_size = 2
+
+
+[*.{fs,fsx}]
+fsharp_max_if_then_else_short_width=50
+fsharp_max_record_width=60
+fsharp_max_array_or_list_width=60
+fsharp_max_value_binding_width=50
+fsharp_max_function_binding_width=50
+fsharp_keep_if_then_in_same_line=true
+fsharp_blank_lines_around_nested_multiline_expressions=false
+fsharp_bar_before_discriminated_union_declaration=true
+fsharp_keep_indent_in_branch=true

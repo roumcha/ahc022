@@ -1,0 +1,41 @@
+{
+  // Editor
+  "files.autoGuessEncoding": false,
+  "editor.inlayHints.enabled": "offUnlessPressed",
+  "editor.stickyScroll.enabled": false,
+
+  // Code Runner
+  "code-runner.executorMapByGlob": {
+    "*": "cd $workspaceRoot && ./judge"
+  },
+  "code-runner.ignoreSelection": true,
+  "code-runner.preserveFocus": false,
+  "code-runner.runInTerminal": true,
+  "code-runner.saveFileBeforeRun": true,
+
+  // C++
+  "[cpp]": {
+    "editor.tabSize": 2
+  },
+  "C_Cpp.clang_format_style": "file",
+
+  // .NET
+  "[csharp]": {
+    "editor.acceptSuggestionOnCommitCharacter": false,
+    "editor.tabSize": 2
+  },
+  "csharp.referencesCodeLens.enabled": false,
+  "dotnetAcquisitionExtension.enableTelemetry": false,
+
+  // Python
+  "isort.check": false,
+  "flake8.severity": {
+    "E": "Error",
+    "F": "Error",
+    "I": "Information",
+    "W": "Warning",
+    "E501": "Hint",
+    "F401": "Hint",
+    "F841": "Hint"
+  }
+}
