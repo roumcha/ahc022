@@ -1,4 +1,4 @@
-subm_id: 5 # 自動で増加
+subm_id: 0 # 自動で増加
 case_dir: in/
 allow_non_ac: 4
 
