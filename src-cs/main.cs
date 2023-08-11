@@ -40,7 +40,7 @@ public readonly struct Solver {
 
     var mapping =
       Enumerable.Range(0, N)
-      .OrderBy(_ => Rng.NextSingle())
+      .OrderBy(_ => Rng.Next())
       .ToArray();
 
     for (int i = 0; i < N; i++) {

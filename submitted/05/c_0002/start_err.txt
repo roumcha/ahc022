@@ -8,7 +8,7 @@ Measurement cost = 918000
 Measurement count = 810
 
 real	0m0.138s
-user	0m0.013s
-sys	0m0.019s
+user	0m0.000s
+sys	0m0.033s
 + ./vis in.txt out.txt
 Score = 1
