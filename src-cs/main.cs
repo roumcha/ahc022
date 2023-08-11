@@ -5,6 +5,8 @@ using static Program; using System; using System.Collections; using System.Colle
 
 
 public static partial class Program {
+  public static Random Rng = new Random(0);
+
   public static void main() {
     int l = cin, n = cin, s = cin;
     var exits = new P[n];
@@ -26,51 +28,45 @@ public readonly struct Solver {
 
   [MI(512)]
   public void Solve() {
-    var range_cnt = CountRange();
-    var temperatures = this.CreateTemperatures(range_cnt);
+    var temperatures = this.CreateTemperatures();
     JudgeIO.Place(L, temperatures);
-    var estimates = this.Predict(temperatures, range_cnt);
+    var estimates = this.Predict(temperatures);
     JudgeIO.Answer(estimates);
   }
 
-  private int[,] CountRange() {
-    var res = new int[L, L];
-    for (int i = 0; i < N; i++) {
-      var exit = Exits[i];
-      res[exit.Y, exit.X]++;
-      foreach (var dir in Dir8) res[(exit.Y + L) % L, (exit.X + L) % L]++;
-    }
-    return res;
-  }
 
-  private readonly int[,] CreateTemperatures(int[,] range_cnt) {
+  private readonly int[,] CreateTemperatures() {
     var temperatures = new int[L, L];
+
+    var mapping =
+      Enumerable.Range(0, N)
+      .OrderBy(_ => Rng.NextSingle())
+      .ToArray();
+
     for (int i = 0; i < N; i++) {
       var exit = Exits[i];
-      temperatures[exit.Y, exit.X] = i * 10;
+      temperatures[exit.Y, exit.X] = mapping[i] * 10;
 
       // 周辺 9 マスも同じ温度にする
       foreach (var dir in Dir8) {
         var p = exit + dir;
-        temperatures[(p.Y + L) % L, (p.X + L) % L] = i * 10;
+        temperatures[(p.Y + L) % L, (p.X + L) % L] = mapping[i] * 10;
       }
     }
+
     return temperatures;
   }
 
 
   [MI(512)]
-  private int[] Predict(int[,] temperatures, int[,] range_cnt) {
+  private int[] Predict(int[,] temperatures) {
     var estimates = new int[N];
 
     for (int i_in = 0; i_in < N; i_in++) {
       // 周辺 9 マスを計測（外れ値の影響を小さくするため、r 乗根を取って平均計算）
       const double root = 3;
-      int cnt = 1;
       var vs = new List<double>(10) { JudgeIO.Measure(i_in, (0, 0)) };
-      foreach (var dir in Dir8) {
-        vs.Add(JudgeIO.Measure(i_in, dir));
-      }
+      foreach (var dir in Dir8) vs.Add(JudgeIO.Measure(i_in, dir));
       double v = Pow(vs.Sum(x => Pow(x, 1.0 / root)) / vs.Count, root);
 
       // 誤差最小の出口に紐づけ
