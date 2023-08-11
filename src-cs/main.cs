@@ -5,9 +5,13 @@ using static Program; using System; using System.Collections; using System.Colle
 
 
 public static partial class Program {
-  public static Random Rng = new Random(0);
+  public static readonly Random Rng = new Random(0);
+  public const long TL = 3500;
+  public static readonly Stopwatch Clock = new Stopwatch();
+  [MI(256)] public static bool TimeCheck() => Clock.ElapsedMilliseconds < TL;
 
   public static void main() {
+    Clock.Start();
     int l = cin, n = cin, s = cin;
     var exits = new P[n];
     for (int i = 0; i < n; i++) exits[i] = (cin, cin);
@@ -56,7 +60,6 @@ public readonly struct Solver {
       int mesure_cnt = 10000 / N;
       var vs = new int[mesure_cnt];
       for (int j = 0; j < mesure_cnt; j++) vs[j] = JudgeIO.Measure(i_in, (0, 0));
-      Array.Sort(vs);
       double v = vs.Average(x => (double)x);
 
       // 誤差最小の出口に紐づけ
