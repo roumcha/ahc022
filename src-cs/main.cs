@@ -41,12 +41,10 @@ public readonly struct Solver {
 
   private readonly int[,] CreateTemperatures() {
     var temperatures = new int[L, L];
-
     for (int i = 0; i < N; i++) {
       var exit = Exits[i];
       temperatures[exit.Y, exit.X] = i * 10;
     }
-
     return temperatures;
   }
 
@@ -56,17 +54,21 @@ public readonly struct Solver {
     var estimates = new int[N];
 
     for (int i_in = 0; i_in < N; i_in++) {
-      // 100 回測って代表値を取る
-      int mesure_cnt = 10000 / N;
-      var vs = new int[mesure_cnt];
-      for (int j = 0; j < mesure_cnt; j++) vs[j] = JudgeIO.Measure(i_in, (0, 0));
-      double v = vs.Average(x => (double)x);
+      // 10000 / N 回測る
+      int measure_cnt = 10000 / N;
+      var vs = new int[measure_cnt];
+      for (int j = 0; j < measure_cnt; j++) vs[j] = JudgeIO.Measure(i_in, (0, 0));
+
+      // 代表値: 上下 5 個捨てて平均
+      double v = vs
+        .Skip(5)
+        .Take(measure_cnt - 10)
+        .Average(x => (double)x);
 
       // 誤差最小の出口に紐づけ
       double min_diff = 9999;
       for (int i_out = 0; i_out < N; i_out++) {
         int y = Exits[i_out].Y, x = Exits[i_out].X;
-
         if (min_diff.ChMin(Abs(temperatures[y, x] - v))) {
           estimates[i_in] = i_out;
         }
@@ -81,26 +83,6 @@ public readonly struct Solver {
     return estimates;
   }
 
-}
-
-
-public readonly struct Torus {
-  private readonly int _len1, _len2;
-  private readonly int[,] _values;
-
-  [MI(256)]
-  public Torus(int len1, int len2) {
-    _len1 = len1;
-    _len2 = len2;
-    _values = new int[len1, len2];
-  }
-
-  public readonly int this[int i, int j] {
-    [MI(256)]
-    get => _values[((i % _len1) + _len1) % _len1, ((j % _len2) + _len2) % _len2];
-    [MI(256)]
-    set => _values[((i % _len1) + _len1) % _len1, ((j % _len2) + _len2) % _len2] = value;
-  }
 }
 
 
