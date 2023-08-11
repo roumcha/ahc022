@@ -38,20 +38,9 @@ public readonly struct Solver {
   private readonly int[,] CreateTemperatures() {
     var temperatures = new int[L, L];
 
-    var mapping =
-      Enumerable.Range(0, N)
-      .OrderBy(_ => Rng.Next())
-      .ToArray();
-
     for (int i = 0; i < N; i++) {
       var exit = Exits[i];
-      temperatures[exit.Y, exit.X] = mapping[i] * 10;
-
-      // 周辺 9 マスも同じ温度にする
-      foreach (var dir in Dir8) {
-        var p = exit + dir;
-        temperatures[(p.Y + L) % L, (p.X + L) % L] = mapping[i] * 10;
-      }
+      temperatures[exit.Y, exit.X] = i * 10;
     }
 
     return temperatures;
@@ -63,11 +52,12 @@ public readonly struct Solver {
     var estimates = new int[N];
 
     for (int i_in = 0; i_in < N; i_in++) {
-      // 周辺 9 マスを計測（外れ値の影響を小さくするため、r 乗根を取って平均計算）
-      const double root = 3;
-      var vs = new List<double>(10) { JudgeIO.Measure(i_in, (0, 0)) };
-      foreach (var dir in Dir8) vs.Add(JudgeIO.Measure(i_in, dir));
-      double v = Pow(vs.Sum(x => Pow(x, 1.0 / root)) / vs.Count, root);
+      // 100 回測って代表値を取る
+      int mesure_cnt = 10000 / N;
+      var vs = new int[mesure_cnt];
+      for (int j = 0; j < mesure_cnt; j++) vs[j] = JudgeIO.Measure(i_in, (0, 0));
+      Array.Sort(vs);
+      double v = vs.Average(x => (double)x);
 
       // 誤差最小の出口に紐づけ
       double min_diff = 9999;
