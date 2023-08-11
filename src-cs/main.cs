@@ -5,11 +5,114 @@ using static Program; using System; using System.Collections; using System.Colle
 
 
 public static partial class Program {
-
   public static void main() {
-    Console.WriteLine("Hello, world!");
+    int l = cin, n = cin, s = cin;
+    var exits = new P[n];
+    for (int i = 0; i < n; i++) exits[i] = (cin, cin);
+    var solver = new Solver(l, n, s, exits);
+    solver.Solve();
+  }
+}
+
+
+public readonly struct Solver {
+  public readonly int L, N, S;
+  public readonly P[] Exits;
+
+  public Solver(int l, int n, int s, P[] exits) {
+    L = l; N = n; S = s; Exits = exits;
   }
 
+
+  [MI(512)]
+  public void Solve() {
+    var temperatures = this.CreateTemperatures();
+    JudgeIO.Place(L, temperatures);
+    var estimates = this.Predict(temperatures);
+    JudgeIO.Answer(estimates);
+  }
+
+
+  private readonly int[,] CreateTemperatures() {
+    var temperatures = new int[L, L];
+    for (int i = 0; i < N; i++) {
+      temperatures[Exits[i].Y, Exits[i].X] = i * 10;
+    }
+    return temperatures;
+  }
+
+
+  private int[] Predict(int[,] temperatures) {
+    var estimates = new int[N];
+
+    for (int i_in = 0; i_in < N; i_in++) {
+      Console.WriteLine($"# measure i={i_in}, move=(0, 0)");
+      var v = JudgeIO.Measure(i_in, (0, 0));
+      int min_diff = 9999;
+
+      for (int i_out = 0; i_out < N; i_out++) {
+        int y = Exits[i_out].Y, x = Exits[i_out].X;
+        if (min_diff.ChMin(Abs(temperatures[y, x] - v))) {
+          estimates[i_in] = i_out;
+        }
+      }
+    }
+
+    return estimates;
+  }
+
+}
+
+
+public readonly struct P : IEquatable<P> {
+  public readonly int Y, X;
+  [MI(256)] public P(int x, int y) { Y = x; X = y; }
+  [MI(256)] public static implicit operator P((int X, int Y) t) => new P(t.X, t.Y);
+  [MI(256)] public static P operator +(in P a, in P b) => new P(a.Y + b.Y, a.X + b.X);
+  [MI(256)] public static P operator -(in P a, in P b) => new P(a.Y - b.Y, a.X - b.X);
+  [MI(256)] public static P operator *(in P a, int b) => new P(a.Y * b, a.X * b);
+  [MI(256)] public static P operator /(in P a, int b) => new P(a.Y / b, a.X / b);
+  [MI(256)] public static bool operator ==(in P a, in P b) => a.Equals(b);
+  [MI(256)] public static bool operator !=(in P a, in P b) => !a.Equals(b);
+  [MI(256)] public readonly double DistE(in P p) { double dy = (double)Y - p.Y, dx = (double)X - p.X; return Math.Sqrt(dx * dx + dy * dy); }
+  [MI(256)] public readonly long DistE2(in P p) { long dy = (long)Y - p.Y, dx = (long)X - p.X; return dx * dx + dy * dy; }
+  [MI(256)] public readonly long DistM(in P p) => Math.Abs((long)Y - p.Y) + Math.Abs((long)X - p.X);
+  [MI(256)] public override readonly string ToString() => Y.ToString() + " " + X.ToString();
+  [MI(256)] public readonly bool Equals(P b) => this.Y == b.Y && this.X == b.X;
+  [MI(256)] public override readonly bool Equals(object o) => base.Equals(o);
+  [MI(256)] public override readonly int GetHashCode() => HashCode.Combine(this.X, this.Y);
+}
+
+
+static class JudgeIO {
+  public static void Place(int l, int[,] temperature) {
+    for (int i = 0; i < l; i++) {
+      for (int j = 0; j < l; j++) {
+        Console.Write(temperature[i, j]);
+        if (j < l - 1) Console.Write(' ');
+      }
+      Console.WriteLine();
+    }
+    cout.Flush();
+  }
+
+  [MI(256)]
+  public static int Measure(int i, in P p) {
+    Console.WriteLine($"{i} {p.Y} {p.X}");
+    cout.Flush();
+    int v = cin;
+    if (v == -1) {
+      Console.WriteLine($"# [WA] Received -1 (i={i}, y={p.Y}, x={p.X})");
+      Environment.Exit(1);
+    }
+    return v;
+  }
+
+  public static void Answer(int[] ans) {
+    Console.WriteLine("-1 -1 -1");
+    Console.WriteLine(string.Join('\n', ans));
+    cout.Flush();
+  }
 }
 
 
@@ -108,25 +211,6 @@ public class COut : StreamWriter {
 
 public class LowerBound<T> : IComparer<T> where T : IComparable<T> { [MI(256)] public int Compare(T x, T y) => 0 <= x!.CompareTo(y) ? 1 : -1; }
 public class UpperBound<T> : IComparer<T> where T : IComparable<T> { [MI(256)] public int Compare(T x, T y) => 0 < x!.CompareTo(y) ? 1 : -1; }
-
-public struct P : IEquatable<P> {
-  public int X, Y;
-  [MI(256)] public P(int x, int y) { X = x; Y = y; }
-  [MI(256)] public static implicit operator P((int X, int Y) t) => new P(t.X, t.Y);
-  [MI(256)] public static P operator +(P a, P b) => new P(a.X + b.X, a.Y + b.Y);
-  [MI(256)] public static P operator -(P a, P b) => new P(a.X - b.X, a.Y - b.Y);
-  [MI(256)] public static P operator *(P a, int b) => new P(a.X * b, a.Y * b);
-  [MI(256)] public static P operator /(P a, int b) => new P(a.X / b, a.Y / b);
-  [MI(256)] public static bool operator ==(P a, P b) => a.Equals(b);
-  [MI(256)] public static bool operator !=(P a, P b) => !a.Equals(b);
-  [MI(256)] public readonly double DistE(P p) { double dx = (double)X - p.X, dy = (double)Y - p.Y; return Math.Sqrt(dx * dx + dy * dy); }
-  [MI(256)] public readonly long DistE2(P p) { long dx = (long)X - p.X, dy = (long)Y - p.Y; return dx * dx + dy * dy; }
-  [MI(256)] public readonly long DistM(P p) => Math.Abs((long)X - p.X) + Math.Abs((long)Y - p.Y);
-  [MI(256)] public override readonly string ToString() => X.ToString() + " " + Y.ToString();
-  [MI(256)] public readonly bool Equals(P b) => this.X == b.X && this.Y == b.Y;
-  [MI(256)] public override readonly bool Equals(object o) => base.Equals(o);
-  [MI(256)] public override readonly int GetHashCode() => base.GetHashCode();
-}
 
 /// <remarks>デフォルトは小さい順</remarks>
 class PriorityQueue_2<T> : PriorityQueueOp<T, ComparableComparer<T>>
