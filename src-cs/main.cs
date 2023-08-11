@@ -30,7 +30,6 @@ public readonly struct Solver {
   }
 
 
-  [MI(512)]
   public void Solve() {
     var temperatures = this.CreateTemperatures();
     JudgeIO.Place(L, temperatures);
