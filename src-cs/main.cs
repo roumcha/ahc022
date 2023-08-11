@@ -26,20 +26,30 @@ public readonly struct Solver {
 
   [MI(512)]
   public void Solve() {
-    var temperatures = this.CreateTemperatures();
+    var range_cnt = CountRange();
+    var temperatures = this.CreateTemperatures(range_cnt);
     JudgeIO.Place(L, temperatures);
-    var estimates = this.Predict(temperatures);
+    var estimates = this.Predict(temperatures, range_cnt);
     JudgeIO.Answer(estimates);
   }
 
+  private int[,] CountRange() {
+    var res = new int[L, L];
+    for (int i = 0; i < N; i++) {
+      var exit = Exits[i];
+      res[exit.Y, exit.X]++;
+      foreach (var dir in Dir8) res[(exit.Y + L) % L, (exit.X + L) % L]++;
+    }
+    return res;
+  }
 
-  private readonly int[,] CreateTemperatures() {
+  private readonly int[,] CreateTemperatures(int[,] range_cnt) {
     var temperatures = new int[L, L];
     for (int i = 0; i < N; i++) {
       var exit = Exits[i];
       temperatures[exit.Y, exit.X] = i * 10;
 
-      // 周辺 9 マスを同じ温度にする
+      // 周辺 9 マスも同じ温度にする
       foreach (var dir in Dir8) {
         var p = exit + dir;
         temperatures[(p.Y + L) % L, (p.X + L) % L] = i * 10;
@@ -50,15 +60,18 @@ public readonly struct Solver {
 
 
   [MI(512)]
-  private int[] Predict(int[,] temperatures) {
+  private int[] Predict(int[,] temperatures, int[,] range_cnt) {
     var estimates = new int[N];
 
     for (int i_in = 0; i_in < N; i_in++) {
-      // 周辺 9 マスを計測（外れ値の影響を小さくするため、ルートを取って平均計算）
+      // 周辺 9 マスを計測（外れ値の影響を小さくするため、r 乗根を取って平均計算）
       const double root = 3;
-      double v = Pow(JudgeIO.Measure(i_in, (0, 0)), 1.0 / root);
-      foreach (var dir in Dir8) v += Pow(JudgeIO.Measure(i_in, dir), 1.0 / root);
-      v = Pow(v / 9, root);
+      int cnt = 1;
+      var vs = new List<double>(10) { JudgeIO.Measure(i_in, (0, 0)) };
+      foreach (var dir in Dir8) {
+        vs.Add(JudgeIO.Measure(i_in, dir));
+      }
+      double v = Pow(vs.Sum(x => Pow(x, 1.0 / root)) / vs.Count, root);
 
       // 誤差最小の出口に紐づけ
       double min_diff = 9999;
@@ -70,7 +83,10 @@ public readonly struct Solver {
         }
       }
 
-      Console.WriteLine($"# measure in={i_in}, out={estimates[i_in]}, v={v}");
+      Console.WriteLine(
+        $"# measure in={i_in}, out={estimates[i_in]}, v={v:####} "
+        + $"({string.Join(", ", vs)})"
+      );
     }
 
     return estimates;
