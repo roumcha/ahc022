@@ -59,10 +59,10 @@ public readonly struct Solver {
       var vs = new int[measure_cnt];
       for (int j = 0; j < measure_cnt; j++) vs[j] = JudgeIO.Measure(i_in, (0, 0));
 
-      // 代表値: 上下 5 個捨てて平均
+      // 代表値: 上下 3 個捨てて平均
       double v = vs
-        .Skip(5)
-        .Take(measure_cnt - 10)
+        .Skip(3)
+        .Take(measure_cnt - 6)
         .Average(x => (double)x);
 
       // 誤差最小の出口に紐づけ
