@@ -1,0 +1,14 @@
++ export DOTNET_CLI_TELEMETRY_OPTOUT=1
++ DOTNET_CLI_TELEMETRY_OPTOUT=1
++ ./tester ./main
+Score = 1
+Number of wrong answers = 69
+Placement cost = 97912800
+Measurement cost = 734400
+Measurement count = 648
+
+real	0m0.138s
+user	0m0.000s
+sys	0m0.035s
++ ./vis in.txt out.txt
+Score = 1

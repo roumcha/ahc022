@@ -1,4 +1,4 @@
-subm_id: 15 # 自動で増加
+subm_id: 25 # 自動で増加
 case_dir: in/
 allow_non_ac: 4
 
@@ -19,7 +19,7 @@ local:
     - { from: start_out.txt, to: start_out.txt }
     - { from: start_err.txt, to: start_err.txt }
     - { from: out.txt, to: out.txt }
-    - { from: vis.html, to: vis.html }
+    # - { from: vis.html, to: vis.html }
   post: null
 
 lambda:
@@ -40,7 +40,7 @@ lambda:
     - { from: start_out.txt, to: start_out.txt }
     - { from: start_err.txt, to: start_err.txt }
     - { from: out.txt, to: out.txt }
-    - { from: vis.html, to: vis.html }
+    # - { from: vis.html, to: vis.html }
   post: null
 
 parse_result:
