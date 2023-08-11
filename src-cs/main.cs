@@ -54,10 +54,17 @@ public readonly struct Solver {
     var estimates = new int[N];
 
     for (int i_in = 0; i_in < N; i_in++) {
-      // 周辺 9 マスを計測
-      double v = JudgeIO.Measure(i_in, (0, 0));
-      foreach (var dir in Dir8) v += JudgeIO.Measure(i_in, dir);
-      v /= 9;
+      // 周辺 9 マスを計測。外れ値の影響を小さくするため、r 乗根で計算
+      const double root = 1;
+      var vs = new List<double> { Pow(JudgeIO.Measure(i_in, (0, 0)), 1.0 / root) };
+      foreach (var dir in Dir8) vs.Add(Pow(JudgeIO.Measure(i_in, dir), 1.0 / root));
+
+      // 中央値を出す。
+      vs.Sort();
+      double med = vs.Count % 2 == 0 ? (vs[vs.Count / 2] + vs[vs.Count / 2 + 1]) / 2 : vs[vs.Count / 2];
+
+      // 中央値を重めに、
+
       // 誤差最小の出口に紐づけ
       double min_diff = 9999;
       for (int i_out = 0; i_out < N; i_out++) {
