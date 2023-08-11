@@ -1,4 +1,4 @@
-subm_id: 0 # 自動で増加
+subm_id: 9 # 自動で増加
 case_dir: in/
 allow_non_ac: 4
 
@@ -10,6 +10,8 @@ local:
     # $casefile でテストケースのパスが入る
     - { from: start_local.sh, to: start.sh }
     - { from: $casefile, to: in.txt }
+    - { from: tester, to: tester }
+    - { from: vis, to: vis }
     - { from: main, to: main }
   collect:
     # from は実行用ディレクトリ、 to はケースごとの結果ディレクトリに解決
@@ -17,8 +19,7 @@ local:
     - { from: start_out.txt, to: start_out.txt }
     - { from: start_err.txt, to: start_err.txt }
     - { from: out.txt, to: out.txt }
-    - { from: err.txt, to: err.txt }
-    - { from: vis.svg, to: vis.svg }
+    - { from: vis.html, to: vis.html }
   post: null
 
 lambda:
@@ -30,6 +31,8 @@ lambda:
     # $casefile でテストケースのパスが入る
     - { from: start_lambda.sh, to: start.sh }
     - { from: $casefile, to: in.txt }
+    - { from: tester, to: tester }
+    - { from: vis, to: vis }
     - { from: main, to: main }
   collect:
     # from は Lambda 上のディレクトリ、 to はケースごとの結果ディレクトリに解決
@@ -37,12 +40,11 @@ lambda:
     - { from: start_out.txt, to: start_out.txt }
     - { from: start_err.txt, to: start_err.txt }
     - { from: out.txt, to: out.txt }
-    - { from: err.txt, to: err.txt }
-    - { from: vis.svg, to: vis.svg }
+    - { from: vis.html, to: vis.html }
   post: null
 
 parse_result:
-  files: [message.txt, start_err.txt, start_out.txt]
+  files: [message.txt, start_err.txt]
   # マッチしなくていい正規表現には 0^ を入力
   time_regex: 'real[ \t]+0m([0-9]+\.[0-9]+)s'
   time_multiplier: 1.0 # 秒に直す
