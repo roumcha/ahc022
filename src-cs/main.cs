@@ -23,8 +23,8 @@ public static partial class Program {
 
     var temperatures = CreateTemperatures();
     JudgeIO.Place(L, temperatures);
-    var estimates = Estimate(temperatures);
-    JudgeIO.Answer(estimates);
+    var estimated = Estimate(temperatures);
+    JudgeIO.Answer(estimated);
   }
 
 
@@ -46,39 +46,51 @@ public static partial class Program {
   }
 
 
+  /// <summary>上下左右に D マス離れた 4 箇所を計測して座標を推測</summary>
+  /// <remarks>O()</remarks>
   private static int[] Estimate(int[,] temperatures) {
-    const int D = 3;
-    var estimates = new int[N];
+    // 初期化
+    var res = new int[N];
+    const int D = 4; // 調整が必要そう
+    int measure_cnt = 10000 / N / 4;
+    var moves = Dir4.Select(p => p * D).ToArray();
 
+    // 各入口について
     for (int i_in = 0; i_in < N; i_in++) {
-      // 10000 / N 回測る
-      P zero = new P(0, 0);
-      int measure_cnt = 10000 / N;
-      var vs = new int[measure_cnt];
-      for (int j = 0; j < measure_cnt; j++) vs[j] = JudgeIO.Measure(i_in, zero);
+      var avg = new double[4];
 
-      // 代表値: 上下 3 個捨てて平均
-      double v = vs
-        .Skip(3)
-        .Take(measure_cnt - 6)
-        .Average(x => (double)x);
-
-      // 誤差最小の出口に紐づけ
-      double min_diff = 9999;
-      for (int i_out = 0; i_out < N; i_out++) {
-        int y = Exits[i_out].Y, x = Exits[i_out].X;
-        if (min_diff.ChMin(Abs(temperatures[y, x] - v))) {
-          estimates[i_in] = i_out;
+      // 4 方向について
+      for (int i_move = 0; i_move < 4; i_move++) {
+        // 10000 / N / 4 回計測
+        var measured = new int[measure_cnt];
+        for (int i_cnt = 0; i_cnt < measure_cnt; i_cnt++) {
+          measured[i_cnt] = JudgeIO.Measure(i_in, moves[i_move]);
         }
+
+        // 上下 1 個捨てて平均を記録
+        avg[i_move] =
+          (int)Round(measured.Skip(1).Take(measure_cnt - 2).Average());
       }
 
-      Console.WriteLine(
-        $"# measure in={i_in}, out={estimates[i_in]}, v={v:####} "
-        + $"({string.Join(", ", vs)})"
-      );
+      // 誤差^EXP の和が最小の出口に紐づけ
+      const double EXP = 1.0; // 調整が必要そう
+      double min_diff = INF64;
+      for (int i_out = 0; i_out < N; i_out++) {
+        double diff = 0;
+        for (int i_move = 0; i_move < 4; i_move++) {
+          P moved_pos = Exits[i_out] + moves[i_move];
+          diff += Pow(
+            Abs(avg[i_move] - temperatures[(moved_pos.Y + L) % L, (moved_pos.X + L) % L]),
+            EXP
+          );
+        }
+        if (min_diff.ChMin(diff)) res[i_in] = i_out;
+      }
+
+      Console.WriteLine($"# estimated from={i_in}, to={res[i_in]}, diff={min_diff}");
     }
 
-    return estimates;
+    return res;
   }
 
 }
@@ -89,15 +101,15 @@ public readonly struct P : IEquatable<P> {
   public readonly int Y, X;
   [MI(256)] public P(int x, int y) { Y = x; X = y; }
   [MI(256)] public static implicit operator P((int X, int Y) t) => new P(t.X, t.Y);
-  [MI(256)] public static P operator +(in P a, in P b) => new P(a.Y + b.Y, a.X + b.X);
-  [MI(256)] public static P operator -(in P a, in P b) => new P(a.Y - b.Y, a.X - b.X);
-  [MI(256)] public static P operator *(in P a, int b) => new P(a.Y * b, a.X * b);
-  [MI(256)] public static P operator /(in P a, int b) => new P(a.Y / b, a.X / b);
-  [MI(256)] public static bool operator ==(in P a, in P b) => a.Equals(b);
-  [MI(256)] public static bool operator !=(in P a, in P b) => !a.Equals(b);
-  [MI(256)] public readonly double DistE(in P p) { double dy = (double)Y - p.Y, dx = (double)X - p.X; return Math.Sqrt(dx * dx + dy * dy); }
-  [MI(256)] public readonly long DistE2(in P p) { long dy = (long)Y - p.Y, dx = (long)X - p.X; return dx * dx + dy * dy; }
-  [MI(256)] public readonly long DistM(in P p) => Math.Abs((long)Y - p.Y) + Math.Abs((long)X - p.X);
+  [MI(256)] public static P operator +(P a, P b) => new P(a.Y + b.Y, a.X + b.X);
+  [MI(256)] public static P operator -(P a, P b) => new P(a.Y - b.Y, a.X - b.X);
+  [MI(256)] public static P operator *(P a, int b) => new P(a.Y * b, a.X * b);
+  [MI(256)] public static P operator /(P a, int b) => new P(a.Y / b, a.X / b);
+  [MI(256)] public static bool operator ==(P a, P b) => a.Equals(b);
+  [MI(256)] public static bool operator !=(P a, P b) => !a.Equals(b);
+  [MI(256)] public readonly double DistE(P p) { double dy = (double)Y - p.Y, dx = (double)X - p.X; return Math.Sqrt(dx * dx + dy * dy); }
+  [MI(256)] public readonly long DistE2(P p) { long dy = (long)Y - p.Y, dx = (long)X - p.X; return dx * dx + dy * dy; }
+  [MI(256)] public readonly long DistM(P p) => Math.Abs((long)Y - p.Y) + Math.Abs((long)X - p.X);
   [MI(256)] public override readonly string ToString() => Y.ToString() + " " + X.ToString();
   [MI(256)] public readonly bool Equals(P b) => this.Y == b.Y && this.X == b.X;
   [MI(256)] public override readonly bool Equals(object o) => base.Equals(o);
@@ -118,7 +130,7 @@ static class JudgeIO {
   }
 
   [MI(256)]
-  public static int Measure(int i, in P p) {
+  public static int Measure(int i, P p) {
     Console.WriteLine($"{i} {p.Y} {p.X}");
     cout.Flush();
     int v = cin;
