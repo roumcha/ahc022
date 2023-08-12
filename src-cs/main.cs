@@ -5,58 +5,57 @@ using static Program; using System; using System.Collections; using System.Colle
 
 
 public static partial class Program {
-  public static readonly Random Rng = new Random(0);
+  public static readonly Random Rand = new Random(0);
   public const long TL = 3500;
   public static readonly Stopwatch Clock = new Stopwatch();
   [MI(256)] public static bool TimeCheck() => Clock.ElapsedMilliseconds < TL;
 
+  public static int L, N, S;
+  public static P[] Exits;
+
+
   public static void main() {
     Clock.Start();
-    int l = cin, n = cin, s = cin;
-    var exits = new P[n];
-    for (int i = 0; i < n; i++) exits[i] = (cin, cin);
-    var solver = new Solver(l, n, s, exits);
-    solver.Solve();
-  }
-}
 
+    L = cin; N = cin; S = cin;
+    Exits = new P[N];
+    for (int i = 0; i < N; i++) Exits[i] = (cin, cin);
 
-public readonly struct Solver {
-  public readonly int L, N, S;
-  public readonly P[] Exits;
-
-  public Solver(int l, int n, int s, P[] exits) {
-    L = l; N = n; S = s; Exits = exits;
-  }
-
-
-  public void Solve() {
-    var temperatures = this.CreateTemperatures();
+    var temperatures = CreateTemperatures();
     JudgeIO.Place(L, temperatures);
-    var estimates = this.Predict(temperatures);
+    var estimates = Estimate(temperatures);
     JudgeIO.Answer(estimates);
   }
 
 
-  private readonly int[,] CreateTemperatures() {
+  /// <summary>グリッドの中央を高温、周縁を低温にする</summary>
+  /// <remarks>O(L^2)</remarks>
+  private static int[,] CreateTemperatures() {
     var temperatures = new int[L, L];
-    for (int i = 0; i < N; i++) {
-      var exit = Exits[i];
-      temperatures[exit.Y, exit.X] = i * 10;
+    P center = new P(L / 2, L / 2);
+    double diff_per_dist = 1000.0 / Sqrt(L * L / 2.0);
+
+    for (int i = 0; i < L; i++) {
+      for (int j = 0; j < L; j++) {
+        var dist = center.DistE(new P(i, j));
+        temperatures[i, j] = (int)Round(1000 - diff_per_dist * dist);
+      }
     }
+
     return temperatures;
   }
 
 
-  [MI(512)]
-  private int[] Predict(int[,] temperatures) {
+  private static int[] Estimate(int[,] temperatures) {
+    const int D = 3;
     var estimates = new int[N];
 
     for (int i_in = 0; i_in < N; i_in++) {
       // 10000 / N 回測る
+      P zero = new P(0, 0);
       int measure_cnt = 10000 / N;
       var vs = new int[measure_cnt];
-      for (int j = 0; j < measure_cnt; j++) vs[j] = JudgeIO.Measure(i_in, (0, 0));
+      for (int j = 0; j < measure_cnt; j++) vs[j] = JudgeIO.Measure(i_in, zero);
 
       // 代表値: 上下 3 個捨てて平均
       double v = vs
@@ -83,6 +82,7 @@ public readonly struct Solver {
   }
 
 }
+
 
 
 public readonly struct P : IEquatable<P> {
