@@ -1,4 +1,4 @@
-subm_id: 92 # 自動で増加
+subm_id: 94 # 自動で増加
 case_dir: in/
 allow_non_ac: 4
 
@@ -51,7 +51,7 @@ parse_result:
   score_regex: '[Ss]core[=: \t]+(-?[0-9]+(\.[0-9]+)?)'
   score_multiplier: 1.0 # ??? なんか直す
   rate_regex: '[Rr]ate[=: \t]+(-?[0-9]+(\.[0-9]+)?)%'
-  rate_multiplier: 0.01 # 割合に直す
+  rate_multiplier: 1.0 # 割合に直す
   force_ac_regex: "0^"
   ie_regex: '\[IE\]'
   ce_regex: '\[CE\]'

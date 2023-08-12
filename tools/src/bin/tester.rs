@@ -130,8 +130,11 @@ fn exec(p: &mut std::process::Child) -> Result<Outcome, String> {
     sim.answer(&op);
     sim.compute_score();
 
+    let score_rate = sim.score as f64 / 1_000_000_000f64;
+
     Ok(Outcome {
         score: sim.score,
+        score_rate,
         wrong_answer: sim.w,
         arrange_cost: sim.arrange_cost,
         measure_cost: sim.measure_cost,
@@ -166,6 +169,7 @@ fn main() {
     match exec(&mut p) {
         Ok(outcome) => {
             eprintln!("Score = {}", outcome.score);
+            eprintln!("Rate = {}", outcome.score_rate);
             eprintln!("Number of wrong answers = {}", outcome.wrong_answer);
             eprintln!("Placement cost = {}", outcome.arrange_cost);
             eprintln!("Measurement cost = {}", outcome.measure_cost);

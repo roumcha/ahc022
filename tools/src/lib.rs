@@ -250,6 +250,7 @@ pub struct AnswerOp {
 
 pub struct Outcome {
     pub score: u64,
+    pub score_rate: f64,
     pub wrong_answer: usize,
     pub arrange_cost: u64,
     pub measure_cost: u64,
