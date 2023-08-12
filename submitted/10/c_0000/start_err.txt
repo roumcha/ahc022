@@ -7,8 +7,8 @@ Placement cost = 2000304
 Measurement cost = 13832000
 Measurement count = 9880
 
-real	0m0.275s
-user	0m0.009s
-sys	0m0.060s
+real	0m0.219s
+user	0m0.000s
+sys	0m0.067s
 + ./vis in.txt out.txt
 Score = 6276557

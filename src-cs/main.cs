@@ -68,6 +68,7 @@ public static partial class Program {
         }
 
         // 上下 1 個捨てて平均を記録
+        Array.Sort(measured);
         avg[i_move] =
           (int)Round(measured.Skip(1).Take(measure_cnt - 2).Average());
       }
