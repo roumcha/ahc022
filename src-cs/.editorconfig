@@ -21,6 +21,8 @@ dotnet_diagnostic.IDE0005.severity = none
 dotnet_diagnostic.CS8019.severity = none
 # 名前空間で型を宣言
 dotnet_diagnostic.CA1050.severity = none
+# const でも readonly でもない公開フィールド
+dotnet_diagnostic.CA2211.severity = none
 
 charset = utf-8
 indent_style = space
