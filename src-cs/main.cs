@@ -153,19 +153,22 @@ public static partial class Program {
     // スコアは小さいほどいい
     var (ans, score) = Init(placed, measured_r4);
 
-    double t_start = 10000, t_end = 1;
+    double temp_from = 4000, temp_to = 1;
     long start_time = Clock.ElapsedMilliseconds;
+    int i = 0;
 
     while (TimeCheck(out long time)) {
+      i++;
       var (a, b, new_score) = Modify(ans, score, placed, measured_r4);
 
       double temp =
-        t_start + (t_end - t_start) * (time - start_time) / (TL - start_time);
+        temp_from + (temp_to - temp_from) * (time - start_time) / (TL - start_time);
 
       double prob = Exp((score - new_score) / temp);
       if (prob <= Rand.NextDouble()) Undo(ans, a, b);
     }
 
+    Console.WriteLine($"# looped {i} times");
     return ans;
   }
 
