@@ -6,12 +6,18 @@ using static Program; using System; using System.Collections; using System.Colle
 
 public static partial class Program {
   public static readonly Random Rand = new Random(0);
-  public const long TL = 3500;
+  public const long TL = 3600;
   public static readonly Stopwatch Clock = new Stopwatch();
-  [MI(256)] public static bool TimeCheck() => Clock.ElapsedMilliseconds < TL;
+  [MI(256)] public static bool TimeCheck(out long time) => (time = Clock.ElapsedMilliseconds) < TL;
 
   public static int L, N, S;
   public static P[] Exits;
+
+  public const int D = 4;
+
+  public static readonly P[] Moves = new P[] {
+    new P(-1, 0) * D, new P(0, -1) * D, new P(1, 0) * D, new P(0, 1) * D
+  };
 
 
   public static void main() {
@@ -21,81 +27,149 @@ public static partial class Program {
     Exits = new P[N];
     for (int i = 0; i < N; i++) Exits[i] = (cin, cin);
 
-    var temperatures = CreateTemperatures();
-    JudgeIO.Place(L, temperatures);
-    var estimated = Estimate(temperatures);
-    JudgeIO.Answer(estimated);
+    // 配置
+    var placed = CreateTemperatures();
+    JudgeIO.Place(L, placed);
+    // 計測
+    var measured_r4 = MeasureTemperatures();
+    // 回答
+    var ans = Solve(placed, measured_r4);
+    JudgeIO.Answer(ans);
   }
-
 
   /// <summary>グリッドの中央を高温、周縁を低温にする</summary>
   /// <remarks>O(L^2)</remarks>
-  private static int[,] CreateTemperatures() {
-    var temperatures = new int[L, L];
+  static int[,] CreateTemperatures() {
+    var res = new int[L, L];
     P center = new P(L / 2, L / 2);
     double diff_per_dist = 1000.0 / Sqrt(L * L / 2.0);
 
     for (int i = 0; i < L; i++) {
       for (int j = 0; j < L; j++) {
         var dist = center.DistE(new P(i, j));
-        temperatures[i, j] = (int)Round(1000 - diff_per_dist * dist);
+        res[i, j] = (int)Round(1000 - diff_per_dist * dist);
       }
-    }
-
-    return temperatures;
-  }
-
-
-  /// <summary>上下左右に D マス離れた 4 箇所を計測して座標を推測</summary>
-  /// <remarks>O()</remarks>
-  private static int[] Estimate(int[,] temperatures) {
-    // 初期化
-    var res = new int[N];
-    const int D = 4; // 調整が必要そう
-    int measure_cnt = 10000 / N / 4;
-    var moves = Dir4.Select(p => p * D).ToArray();
-
-    // 各入口について
-    for (int i_in = 0; i_in < N; i_in++) {
-      var avg = new double[4];
-
-      // 4 方向について
-      for (int i_move = 0; i_move < 4; i_move++) {
-        // 10000 / N / 4 回計測
-        var measured = new int[measure_cnt];
-        for (int i_cnt = 0; i_cnt < measure_cnt; i_cnt++) {
-          measured[i_cnt] = JudgeIO.Measure(i_in, moves[i_move]);
-        }
-
-        // 上下 1 個捨てて平均を記録
-        Array.Sort(measured);
-        avg[i_move] =
-          (int)Round(measured.Skip(1).Take(measure_cnt - 2).Average());
-      }
-
-      // 誤差^EXP の和が最小の出口に紐づけ
-      const double EXP = 1.0; // 調整が必要そう
-      double min_diff = INF64;
-      for (int i_out = 0; i_out < N; i_out++) {
-        double diff = 0;
-        for (int i_move = 0; i_move < 4; i_move++) {
-          P moved_pos = Exits[i_out] + moves[i_move];
-          diff += Pow(
-            Abs(avg[i_move] - temperatures[(moved_pos.Y + L) % L, (moved_pos.X + L) % L]),
-            EXP
-          );
-        }
-        if (min_diff.ChMin(diff)) res[i_in] = i_out;
-      }
-
-      Console.WriteLine($"# estimated from={i_in}, to={res[i_in]}, diff={min_diff}");
     }
 
     return res;
   }
 
-}
 
+  /// <summary>上下左右に D マス離れた 4 箇所を計測</summary>
+  /// <remarks>O()</remarks>
+  static double[,] MeasureTemperatures() {
+    // 初期化
+    var res = new double[N, 4];
+    int measure_cnt = 10000 / N / 4;
+
+    // 各入口について
+    for (int i_in = 0; i_in < N; i_in++) {
+      // 4 方向それぞれに
+      for (int i_move = 0; i_move < 4; i_move++) {
+        // 10000 / N / 4 回計測
+        var measured = new int[measure_cnt];
+        for (int i_cnt = 0; i_cnt < measure_cnt; i_cnt++) {
+          measured[i_cnt] = JudgeIO.Measure(i_in, Moves[i_move]);
+        }
+
+        // 外れ値を上下 1 個捨てて平均を記録
+        Array.Sort(measured);
+        int sum = 0;
+        for (int i = 1; i < measure_cnt - 1; i++) sum += measured[i];
+        res[i_in, i_move] = (double)sum / (measure_cnt - 2);
+      }
+    }
+
+    return res;
+  }
+
+
+  /// <summary>ある入口と出口を紐づけた時の誤差を計算</summary>
+  /// <remarks>O(1)</remarks>
+  [MI(256)]
+  static double CalcDiff(int id_in, int id_out, int[,] placed, double[,] measured_r4) {
+    double res = 0;
+    for (int i_move = 0; i_move < 4; i_move++) {
+      P moved_pos = Exits[id_out] + Moves[i_move];
+      res += Abs(
+        measured_r4[id_in, i_move]
+        - placed[(moved_pos.Y + L) % L, (moved_pos.X + L) % L]
+      );
+    }
+    return res;
+  }
+
+
+  /// <summary>初期解を構成する</summary>
+  /// <remarks>O()</remarks>
+  static (int[] Ans, double Score) Init(int[,] placed, double[,] measured_r4) {
+    var ans = new int[N];
+    double score = 0;
+    var used_out = new bool[N];
+
+    // 各入口について
+    for (int i_in = 0; i_in < N; i_in++) {
+      double min_diff = INF64;
+      // 各出口について
+      for (int i_out = 0; i_out < N; i_out++) {
+        if (used_out[i_out]) continue;
+        // 紐づけたときの差が最小となる出口に紐づけ
+        double diff = CalcDiff(i_in, i_out, placed, measured_r4);
+        if (min_diff.ChMin(diff)) ans[i_in] = i_out;
+      }
+      used_out[ans[i_in]] = true;
+      score += min_diff;
+    }
+
+    return (ans, score);
+  }
+
+
+  /// <summary>入口と出口の対応を 1 組入れ替える</summary>
+  /// <remarks>O(1) たぶん重め</remarks>
+  [MI(256)]
+  static (int a, int b, double new_score) Modify(
+    int[] ans, double score, int[,] placed, double[,] measured_r4
+  ) {
+    int a = Rand.Next(0, N), b = Rand.Next(0, N);
+    double now_a = CalcDiff(a, ans[a], placed, measured_r4);
+    double now_b = CalcDiff(b, ans[b], placed, measured_r4);
+    Swap(ref ans[a], ref ans[b]);
+    double next_a = CalcDiff(a, ans[a], placed, measured_r4);
+    double next_b = CalcDiff(b, ans[b], placed, measured_r4);
+    return (a, b, score + next_a + next_b - now_a - now_b);
+  }
+
+
+  /// <summary>Modify を元に戻す</summary>
+  /// <remarks>O()</remarks>
+  [MI(256)]
+  private static void Undo(int[] ans, int a, int b) => Swap(ref ans[a], ref ans[b]);
+
+
+  /// <summary>焼きなましによって差を最小化する</summary>
+  /// <remarks>O()</remarks>
+  static int[] Solve(int[,] placed, double[,] measured_r4) {
+    // スコアは小さいほどいい
+    var (ans, score) = Init(placed, measured_r4);
+
+    double t_start = 10000, t_end = 1;
+    long start_time = Clock.ElapsedMilliseconds;
+
+    while (TimeCheck(out long time)) {
+      var (a, b, new_score) = Modify(ans, score, placed, measured_r4);
+
+      double temp =
+        t_start + (t_end - t_start) * (time - start_time) / (TL - start_time);
+
+      double prob = Exp((score - new_score) / temp);
+      if (prob <= Rand.NextDouble()) Undo(ans, a, b);
+    }
+
+    return ans;
+  }
+
+}
 
 
 public readonly struct P : IEquatable<P> {
