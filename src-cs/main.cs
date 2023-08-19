@@ -12,12 +12,8 @@ public static partial class Program {
 
   public static int L, N, S;
   public static P[] Exits;
-
-  public const int D = 5;
-
-  public static readonly P[] Moves = new P[] {
-    new P(-1, 0) * D, new P(0, -1) * D, new P(1, 0) * D, new P(0, 1) * D
-  };
+  public static int C, D;
+  public static P[] Moves;
 
 
   public static void main() {
@@ -26,6 +22,16 @@ public static partial class Program {
     L = cin; N = cin; S = cin;
     Exits = new P[N];
     for (int i = 0; i < N; i++) Exits[i] = (cin, cin);
+    SetCD();
+
+    Console.WriteLine($"# L={L}, N={N}, S={S}, D={D}");
+
+    Moves = new P[] {
+      new P(-1, 0) * D,
+      new P(0, -1) * D,
+      new P(1, 0) * D,
+      new P(0, 1) * D
+    };
 
     // 配置
     var placed = CreateTemperatures();
@@ -35,6 +41,30 @@ public static partial class Program {
     // 回答
     var ans = Solve(placed, measured_ard);
     JudgeIO.Answer(ans);
+  }
+
+  /// <summary>C と D の値を決める</summary>
+  static void SetCD() {
+    C = 10000 / N / 4;
+    D = 4;
+    if (L < 23) {
+      if (S < 10) D = 1;
+      else if (S < 200) D = 2;
+      else if (S < 400) D = 3;
+      else D = 4;
+    } else if (L < 37) {
+      if (S < 10) D = 1;
+      else if (S < 200) D = 4;
+      else if (S < 400) D = N < 80 ? 7 : 8;
+      else D = N < 80 ? 7 : 8;
+    } else {
+      if (S < 10) D = N < 80 ? 1 : 2;
+      else if (S < 200) D = 6;
+      else if (S < 400) D = N < 80 ? 9 : 11;
+      else D = 11;
+    }
+
+    if (D <= 1) C = 10;
   }
 
   /// <summary>グリッドの中央を高温、周縁を低温にする</summary>
@@ -55,28 +85,27 @@ public static partial class Program {
   }
 
 
-  /// <summary>各出口から D マス離れた周囲 4 点を計測</summary>
+  /// <summary>各出口から D マス離れた周囲を計測</summary>
   /// <remarks>O()</remarks>
   static double[,] MeasureAround() {
     // 初期化
-    var res = new double[N, 4];
-    int measure_cnt = 10000 / N / 4;
+    var res = new double[N, Moves.Length];
 
     // 各入口について
     for (int i_in = 0; i_in < N; i_in++) {
-      // 4 方向それぞれに
-      for (int i_move = 0; i_move < 4; i_move++) {
-        // 10000 / N / 4 回計測
-        var measured = new int[measure_cnt];
-        for (int i_cnt = 0; i_cnt < measure_cnt; i_cnt++) {
+      // それぞれの移動に
+      for (int i_move = 0; i_move < Moves.Length; i_move++) {
+        // C 回計測
+        var measured = new int[C];
+        for (int i_cnt = 0; i_cnt < C; i_cnt++) {
           measured[i_cnt] = JudgeIO.Measure(i_in, Moves[i_move]);
         }
 
         // 外れ値を上下 1 個捨てて平均を記録
         Array.Sort(measured);
         int sum = 0;
-        for (int i = 1; i < measure_cnt - 1; i++) sum += measured[i];
-        res[i_in, i_move] = (double)sum / (measure_cnt - 2);
+        for (int i = 1; i < C - 1; i++) sum += measured[i];
+        res[i_in, i_move] = (double)sum / (C - 2);
       }
     }
 
@@ -89,7 +118,7 @@ public static partial class Program {
   [MI(256)]
   static double CalcDiff(int id_in, int id_out, int[,] placed, double[,] measured_ard) {
     double res = 0;
-    for (int i_move = 0; i_move < 4; i_move++) {
+    for (int i_move = 0; i_move < Moves.Length; i_move++) {
       P moved_pos = Exits[id_out] + Moves[i_move];
       res += Abs(
         measured_ard[id_in, i_move]
@@ -165,7 +194,10 @@ public static partial class Program {
         temp_from + (temp_to - temp_from) * (time - start_time) / (TL - start_time);
 
       double prob = Exp((score - new_score) / temp);
-      if (prob <= Rand.NextDouble()) Undo(ans, a, b);
+
+      if (prob <= Rand.NextDouble()) {
+        Undo(ans, a, b);
+      }
     }
 
     Console.WriteLine($"# looped {i} times");
