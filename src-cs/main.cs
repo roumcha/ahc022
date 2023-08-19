@@ -13,7 +13,7 @@ public static partial class Program {
   public static int L, N, S;
   public static P[] Exits;
 
-  public const int D = 4;
+  public const int D = 5;
 
   public static readonly P[] Moves = new P[] {
     new P(-1, 0) * D, new P(0, -1) * D, new P(1, 0) * D, new P(0, 1) * D
@@ -31,9 +31,9 @@ public static partial class Program {
     var placed = CreateTemperatures();
     JudgeIO.Place(L, placed);
     // 計測
-    var measured_r4 = MeasureTemperatures();
+    var measured_ard = MeasureAround();
     // 回答
-    var ans = Solve(placed, measured_r4);
+    var ans = Solve(placed, measured_ard);
     JudgeIO.Answer(ans);
   }
 
@@ -55,9 +55,9 @@ public static partial class Program {
   }
 
 
-  /// <summary>上下左右に D マス離れた 4 箇所を計測</summary>
+  /// <summary>各出口から D マス離れた周囲 4 点を計測</summary>
   /// <remarks>O()</remarks>
-  static double[,] MeasureTemperatures() {
+  static double[,] MeasureAround() {
     // 初期化
     var res = new double[N, 4];
     int measure_cnt = 10000 / N / 4;
@@ -84,15 +84,15 @@ public static partial class Program {
   }
 
 
-  /// <summary>ある入口と出口を紐づけた時の誤差を計算</summary>
+  /// <summary>出口 id_out を、座標 p に紐づけた時の誤差を計算</summary>
   /// <remarks>O(1)</remarks>
   [MI(256)]
-  static double CalcDiff(int id_in, int id_out, int[,] placed, double[,] measured_r4) {
+  static double CalcDiff(int id_in, int id_out, int[,] placed, double[,] measured_ard) {
     double res = 0;
     for (int i_move = 0; i_move < 4; i_move++) {
       P moved_pos = Exits[id_out] + Moves[i_move];
       res += Abs(
-        measured_r4[id_in, i_move]
+        measured_ard[id_in, i_move]
         - placed[(moved_pos.Y + L) % L, (moved_pos.X + L) % L]
       );
     }
@@ -102,7 +102,7 @@ public static partial class Program {
 
   /// <summary>初期解を構成する</summary>
   /// <remarks>O()</remarks>
-  static (int[] Ans, double Score) Init(int[,] placed, double[,] measured_r4) {
+  static (int[] Ans, double Score) Init(int[,] placed, double[,] measured_ard) {
     var ans = new int[N];
     double score = 0;
     var used_out = new bool[N];
@@ -114,7 +114,7 @@ public static partial class Program {
       for (int i_out = 0; i_out < N; i_out++) {
         if (used_out[i_out]) continue;
         // 紐づけたときの差が最小となる出口に紐づけ
-        double diff = CalcDiff(i_in, i_out, placed, measured_r4);
+        double diff = CalcDiff(i_in, i_out, placed, measured_ard);
         if (min_diff.ChMin(diff)) ans[i_in] = i_out;
       }
       used_out[ans[i_in]] = true;
@@ -129,14 +129,14 @@ public static partial class Program {
   /// <remarks>O(1) たぶん重め</remarks>
   [MI(256)]
   static (int a, int b, double new_score) Modify(
-    int[] ans, double score, int[,] placed, double[,] measured_r4
+    int[] ans, double score, int[,] placed, double[,] measured_ard
   ) {
     int a = Rand.Next(0, N), b = Rand.Next(0, N);
-    double now_a = CalcDiff(a, ans[a], placed, measured_r4);
-    double now_b = CalcDiff(b, ans[b], placed, measured_r4);
+    double now_a = CalcDiff(a, ans[a], placed, measured_ard);
+    double now_b = CalcDiff(b, ans[b], placed, measured_ard);
     Swap(ref ans[a], ref ans[b]);
-    double next_a = CalcDiff(a, ans[a], placed, measured_r4);
-    double next_b = CalcDiff(b, ans[b], placed, measured_r4);
+    double next_a = CalcDiff(a, ans[a], placed, measured_ard);
+    double next_b = CalcDiff(b, ans[b], placed, measured_ard);
     return (a, b, score + next_a + next_b - now_a - now_b);
   }
 
@@ -149,9 +149,9 @@ public static partial class Program {
 
   /// <summary>焼きなましによって差を最小化する</summary>
   /// <remarks>O()</remarks>
-  static int[] Solve(int[,] placed, double[,] measured_r4) {
+  static int[] Solve(int[,] placed, double[,] measured_ard) {
     // スコアは小さいほどいい
-    var (ans, score) = Init(placed, measured_r4);
+    var (ans, score) = Init(placed, measured_ard);
 
     double temp_from = 4000, temp_to = 1;
     long start_time = Clock.ElapsedMilliseconds;
@@ -159,7 +159,7 @@ public static partial class Program {
 
     while (TimeCheck(out long time)) {
       i++;
-      var (a, b, new_score) = Modify(ans, score, placed, measured_r4);
+      var (a, b, new_score) = Modify(ans, score, placed, measured_ard);
 
       double temp =
         temp_from + (temp_to - temp_from) * (time - start_time) / (TL - start_time);
