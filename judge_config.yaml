@@ -1,10 +1,10 @@
-subm_id: 249 # 自動で増加
+subm_id: 260 # 自動で増加
 case_dir: in/
 allow_non_ac: 4
 
 local:
   pre: dotnet publish -c Release -o ./
-  parallel: 3
+  parallel: 4
   send:
     # from はカレントディレクトリ、 to は実行用ディレクトリに解決
     # $casefile でテストケースのパスが入る
@@ -24,7 +24,7 @@ local:
 
 lambda:
   pre: dotnet publish -c Release -o ./
-  parallel: 2
+  parallel: 10
   function_name: dual-judge
   send:
     # from はカレントディレクトリ、 to は Lambda 上のディレクトリに解決

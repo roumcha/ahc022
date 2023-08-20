@@ -6,7 +6,7 @@ using static Program; using System; using System.Collections; using System.Colle
 
 public static partial class Program {
   public static readonly Random Rand = new Random(0);
-  public const long TL = 3600;
+  public const long TL = 3700;
   public static readonly Stopwatch Clock = new Stopwatch();
   [MI(256)] public static bool TimeCheck(out long time) => (time = Clock.ElapsedMilliseconds) < TL;
 
@@ -43,6 +43,7 @@ public static partial class Program {
     JudgeIO.Answer(ans);
   }
 
+
   /// <summary>C と D の値を決める</summary>
   static void SetCD() {
     C = 10000 / N / 4;
@@ -64,8 +65,10 @@ public static partial class Program {
       else D = 11;
     }
 
-    if (D <= 1) C = 10;
+    if (D == 1) C = 10;
+    if (D == 2) C = 20;
   }
+
 
   /// <summary>グリッドの中央を高温、周縁を低温にする</summary>
   /// <remarks>O(L^2)</remarks>
@@ -113,7 +116,7 @@ public static partial class Program {
   }
 
 
-  /// <summary>出口 id_out を、座標 p に紐づけた時の誤差を計算</summary>
+  /// <summary>ある入口と出口を紐づけた時の誤差を計算</summary>
   /// <remarks>O(1)</remarks>
   [MI(256)]
   static double CalcDiff(int id_in, int id_out, int[,] placed, double[,] measured_ard) {
