@@ -15,7 +15,7 @@ public static partial class Program {
   public static int C, D;
   public static P[] Moves;
 
-
+  [MI(512)]
   public static void main() {
     Clock.Start();
 
@@ -90,6 +90,7 @@ public static partial class Program {
 
   /// <summary>各出口から D マス離れた周囲を計測</summary>
   /// <remarks>O()</remarks>
+  [MI(512)]
   static double[,] MeasureAround() {
     // 初期化
     var res = new double[N, Moves.Length];
@@ -134,6 +135,7 @@ public static partial class Program {
 
   /// <summary>初期解を構成する</summary>
   /// <remarks>O()</remarks>
+  [MI(512)]
   static (int[] Ans, double Score) Init(int[,] placed, double[,] measured_ard) {
     var ans = new int[N];
     double score = 0;
@@ -181,6 +183,7 @@ public static partial class Program {
 
   /// <summary>焼きなましによって差を最小化する</summary>
   /// <remarks>O()</remarks>
+  [MI(512)]
   static int[] Solve(int[,] placed, double[,] measured_ard) {
     // スコアは小さいほどいい
     var (ans, score) = Init(placed, measured_ard);
@@ -231,6 +234,7 @@ public readonly struct P : IEquatable<P> {
 
 
 static class JudgeIO {
+  [MI(512)]
   public static void Place(int l, int[,] temperature) {
     for (int i = 0; i < l; i++) {
       for (int j = 0; j < l; j++) {
